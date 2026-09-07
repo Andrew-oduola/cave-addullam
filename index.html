@@ -106,7 +106,7 @@
     <section id="apply" class="bg-mist" aria-labelledby="apply-title">
       <div class="mx-auto grid max-w-6xl gap-12 px-5 py-20 lg:grid-cols-[.7fr_1.3fr] lg:px-8 lg:py-28"><div><p class="mb-3 text-sm font-bold uppercase tracking-[.18em] text-leaf">Cohort One</p><h2 id="apply-title" class="font-display text-4xl font-bold leading-tight sm:text-5xl">Ready to start?</h2><p class="mt-5 leading-7 text-ink/70">Tell us a little about yourself. It takes about five minutes.</p><dl class="mt-10 space-y-4 border-t border-ink/10 pt-6 text-sm"><div class="flex justify-between gap-4"><dt class="text-ink/60">Cohort size</dt><dd id="cohort-size" class="font-bold">To be confirmed</dd></div><div class="flex justify-between gap-4"><dt class="text-ink/60">Start date</dt><dd id="start-date" class="font-bold">To be confirmed</dd></div><div class="flex justify-between gap-4"><dt class="text-ink/60">Programme length</dt><dd id="programme-weeks" class="font-bold">To be confirmed</dd></div></dl></div>
         <div class="rounded-2xl bg-white p-6 shadow-soft sm:p-9"><div id="success" class="hidden rounded-xl bg-[#e6f4e8] p-6 text-leaf" role="status"><h3 class="font-display text-2xl font-bold">Application received.</h3><p class="mt-2 leading-7">Thank you for putting your idea forward. We will be in touch with next steps.</p></div>
-          <form id="application-form" action="TODO_GOOGLE_FORM_ACTION_URL" method="post" class="space-y-5" novalidate>
+          <form id="application-form" action="https://formspree.io/f/myeynlbo" method="post" class="space-y-5" novalidate>
             <p class="text-sm text-ink/60"><span class="text-gold">*</span> Required fields</p>
             <div class="grid gap-5 sm:grid-cols-2"><div><label for="full-name" class="text-sm font-bold">Full name <span class="text-gold">*</span></label><input id="full-name" name="entry.FULL_NAME" required autocomplete="name" class="mt-2 w-full rounded-lg border border-ink/20 bg-white px-4 py-3" type="text"></div><div><label for="phone" class="text-sm font-bold">Phone (WhatsApp) <span class="text-gold">*</span></label><input id="phone" name="entry.PHONE" required autocomplete="tel" class="mt-2 w-full rounded-lg border border-ink/20 bg-white px-4 py-3" type="tel"></div></div>
             <div class="grid gap-5 sm:grid-cols-2"><div><label for="email" class="text-sm font-bold">Email <span class="text-gold">*</span></label><input id="email" name="entry.EMAIL" required autocomplete="email" class="mt-2 w-full rounded-lg border border-ink/20 bg-white px-4 py-3" type="email"></div><div><label for="school" class="text-sm font-bold">School or institution <span class="text-gold">*</span></label><input id="school" name="entry.SCHOOL" required class="mt-2 w-full rounded-lg border border-ink/20 bg-white px-4 py-3" type="text"></div></div>
@@ -135,9 +135,6 @@
     const COHORT_SIZE = '100';
     const START_DATE = 'October 2026';
     const PROGRAMME_WEEKS = '6 weeks';
-    // TODO: Replace the form action and entry.* names above with Google Form values.
-    const GOOGLE_FORM_READY = false;
-
     document.getElementById('cohort-size').textContent = COHORT_SIZE;
     document.getElementById('start-date').textContent = START_DATE;
     document.getElementById('programme-weeks').textContent = PROGRAMME_WEEKS;
@@ -145,7 +142,7 @@
     const form = document.getElementById('application-form');
     const error = document.getElementById('form-error');
     const success = document.getElementById('success');
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!form.checkValidity()) {
         error.classList.remove('hidden');
@@ -153,12 +150,26 @@
         return;
       }
       error.classList.add('hidden');
-      if (!GOOGLE_FORM_READY) {
-        success.querySelector('p').textContent = 'Your details look good. The organiser will connect the form before applications go live.';
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) throw new Error('Form submission failed');
+        success.querySelector('p').textContent = 'Thank you for putting your idea forward. We will be in touch with next steps.';
+        success.classList.remove('hidden');
+        form.classList.add('hidden');
+        success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch (submissionError) {
+        error.textContent = 'We could not send your application. Please check your connection and try again.';
+        error.classList.remove('hidden');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit application →';
       }
-      success.classList.remove('hidden');
-      form.classList.add('hidden');
-      success.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   </script>
 </body>
